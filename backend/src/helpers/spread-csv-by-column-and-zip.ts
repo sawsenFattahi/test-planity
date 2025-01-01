@@ -18,7 +18,7 @@ const spreadCsvByColumnAndZip = async (
 
     if (Object.keys(groupedData).length === 0) {
       console.warn(`No data was grouped for column "${columnName}".`);
-      res.status(400).send(`No data was grouped for column "${columnName}". Please check your CSV file.`);
+      res.status(490).send(`No data was grouped for column "${columnName}". Please check your CSV file.`);
       return;
     }
 

@@ -35,7 +35,6 @@ export const csvController = async (req: Request, res: Response) => {
     );
 
     console.log('Sending success response');
-    res.status(200);
   } catch (error) {
     res.status(500).send('Error during file processing. Please try again.');
   }
