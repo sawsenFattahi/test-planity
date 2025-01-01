@@ -1,5 +1,6 @@
 /* eslint-disable no-unused-vars */
 import axios from 'axios';
+import errorHandlingMessage from '../helpers/errorHandlingMessage';
 
 const compressFileApi = async (
   file: File,
@@ -49,10 +50,9 @@ const compressFileApi = async (
     // Update the status and progress
     await handleStatus('success');
     await handleProgress(100);
-  } catch (error) {
-    console.error(error);
+  } catch (error: any) {
     handleStatus('fail');
-    handleMessage('Something went wrong. Please try again.');
+    handleMessage(errorHandlingMessage[error.response.status]);
   }
 };
 
