@@ -41,7 +41,6 @@ const DragNdrop = () => {
         <AiOutlineCloudUpload />
         <div>
           <p>Drag and drop your CSV files here</p>
-          <p>Limit 15MB per file.</p>
         </div>
       </UploadInfo>
 
