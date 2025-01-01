@@ -16,6 +16,12 @@ const spreadCsvByColumnAndZip = async (
   try {
     const groupedData = await readAndGroupCsvData(filePath, columnName);
 
+    if (Object.keys(groupedData).length === 0) {
+      console.warn(`No data was grouped for column "${columnName}".`);
+      res.status(400).send(`No data was grouped for column "${columnName}". Please check your CSV file.`);
+      return;
+    }
+
     const filePaths = await writeGroupedDataToCsv(groupedData, outputFolder);
 
     await createZipFromCsvFiles(filePaths, zipOutputPath);
