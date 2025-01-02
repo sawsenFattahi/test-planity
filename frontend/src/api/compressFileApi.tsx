@@ -4,55 +4,63 @@ import errorHandlingMessage from '../helpers/errorHandlingMessage';
 
 const compressFileApi = async (
   file: File,
-  handleStatus: { (status: string): void },
-  handleProgress: { (progress: number): void },
-  handleDownloadLink: { (link: string): void },
-  handleMessage: { (message: string): void },
+  handleStatus: (status: string) => void,
+  handleProgress: (progress: number) => void,
+  handleDownloadLink: (link: string) => void,
+  handleMessage: (message: string) => void,
 ) => {
   const formData = new FormData();
   formData.append('file', file);
   formData.append('column', 'gender');
 
-  // Retrieve the API key and URL from environment variables
   const PARSE_API_KEY = import.meta.env.VITE_PARSE_API_KEY;
   const PARSE_API_URL = import.meta.env.VITE_PARSE_API_URL || 'http://localhost:3000/upload';
-
-  // Set the Bearer token in the Authorization header
   const authorizationHeader = `Bearer ${PARSE_API_KEY}`;
 
-  await handleMessage('Please wait while we process your files.');
-  await handleStatus('compressing');
+  handleMessage('Please wait while we process your files.');
+  handleStatus('compressing');
 
   try {
-    // Make the API request with the Bearer token in the Authorization header
+    // Initialize upload progress
+    let uploadComplete = false;
+    let processingMessageShown = false;
+
     const response = await axios.post(PARSE_API_URL, formData, {
       headers: {
-        Authorization: authorizationHeader, // Use Bearer token
+        Authorization: authorizationHeader,
         'Content-Type': 'multipart/form-data',
       },
       responseType: 'blob',
-      onUploadProgress: (progressEvent) => {
-        if (progressEvent.total) {
-          const percentage = Math.round(
-            (progressEvent.loaded * 100) / progressEvent.total,
-          );
+      onUploadProgress: ({ loaded, total }) => {
+        if (total) {
+          const percentage = Math.round((loaded * 100) / total);
           handleProgress(percentage);
+          if (percentage === 100) {
+            uploadComplete = true;
+          }
         }
       },
     });
 
-    // Create the Blob from the response and generate the download link
-    const blob = new Blob([response.data], { type: 'application/zip' });
-    const link = URL.createObjectURL(blob);
+    // Ensure progress stays at 100% only when the download link is ready
+    if (uploadComplete) {
+      if (!processingMessageShown) {
+        handleMessage('Processing file on server...');
+        processingMessageShown = true;
+      }
 
-    await handleDownloadLink(link);
+      const blob = new Blob([response.data], { type: 'application/zip' });
+      const link = URL.createObjectURL(blob);
 
-    // Update the status and progress
-    await handleStatus('success');
-    await handleProgress(100);
+      handleDownloadLink(link);
+      handleStatus('success');
+      handleMessage('File ready for download.');
+      handleProgress(100); // Finalize progress to 100% when the download link is ready
+    }
   } catch (error: any) {
+    const errorMessage = error.response?.status ? errorHandlingMessage[error.response.status] : 'An unexpected error occurred.';
     handleStatus('fail');
-    handleMessage(errorHandlingMessage[error.response.status]);
+    handleMessage(errorMessage);
   }
 };
 
